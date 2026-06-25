@@ -1,0 +1,19 @@
+.hero-section {
+  background: linear-gradient(135deg, #198754, #20c997);
+  min-height: 320px;
+}
+
+.product-card img {
+  height: 180px;
+  object-fit: cover;
+}
+
+.App {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+footer {
+  margin-top: auto;
+}
