@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Signup Form Validation</title>
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .signup-card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    padding: 36px 32px;
+    width: 100%;
+    max-width: 420px;
+  }
+  .signup-card h2 {
+    margin: 0 0 6px;
+    text-align: center;
+    color: #2c2c54;
+  }
+  .signup-card p.subtitle {
+    text-align: center;
+    color: #888;
+    margin: 0 0 24px;
+    font-size: 14px;
+  }
+  .form-group {
+    margin-bottom: 18px;
+  }
+  label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 6px;
+  }
+  input {
+    width: 100%;
+    padding: 11px 12px;
+    border: 1.5px solid #d8d8e0;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+  }
+  input:focus {
+    border-color: #2575fc;
+    box-shadow: 0 0 0 3px rgba(37,117,252,0.15);
+  }
+  input.invalid {
+    border-color: #e74c3c;
+  }
+  input.valid {
+    border-color: #2ecc71;
+  }
+  .error-msg {
+    color: #e74c3c;
+    font-size: 12.5px;
+    margin-top: 5px;
+  }
+  .success-msg {
+    color: #2ecc71;
+    font-size: 12.5px;
+    margin-top: 5px;
+  }
+  .strength-bar {
+    height: 6px;
+    border-radius: 4px;
+    background: #eee;
+    margin-top: 8px;
+    overflow: hidden;
+  }
+  .strength-bar-fill {
+    height: 100%;
+    transition: width 0.3s, background-color 0.3s;
+  }
+  .strength-label {
+    font-size: 12px;
+    margin-top: 4px;
+    font-weight: 600;
+  }
+  button {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: opacity 0.2s;
+  }
+  button:hover {
+    opacity: 0.9;
+  }
+  .form-success {
+    text-align: center;
+    color: #2ecc71;
+    font-weight: 600;
+    margin-top: 16px;
+    font-size: 15px;
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState: useStateUnused } = React; // not used, class components only
+
+class SignupForm extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      username: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+      errors: {},
+      touched: {},
+      submitted: false
+    };
+
+    this.handleChange = this.handleChange.bind(this);
+    this.handleBlur = this.handleBlur.bind(this);
+    this.handleSubmit = this.handleSubmit.bind(this);
+  }
+
+  validateField(name, value) {
+    const { password } = this.state;
+    let error = "";
+
+    switch (name) {
+      case "username":
+        if (!value.trim()) error = "Username is required.";
+        else if (value.trim().length < 3) error = "Username must be at least 3 characters.";
+        break;
+
+      case "email":
+        if (!value.trim()) error = "Email is required.";
+        else {
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          if (!emailRegex.test(value)) error = "Please enter a valid email address.";
+        }
+        break;
+
+      case "password":
+        if (!value) error = "Password is required.";
+        else {
+          const strength = this.getPasswordStrength(value);
+          if (strength.score < 3) error = "Password is too weak.";
+        }
+        break;
+
+      case "confirmPassword":
+        if (!value) error = "Please confirm your password.";
+        else if (value !== password) error = "Passwords do not match.";
+        break;
+
+      default:
+        break;
+    }
+    return error;
+  }
+
+  getPasswordStrength(password) {
+    let score = 0;
+    if (password.length >= 8) score++;
+    if (/[A-Z]/.test(password)) score++;
+    if (/[a-z]/.test(password)) score++;
+    if (/[0-9]/.test(password)) score++;
+    if (/[^A-Za-z0-9]/.test(password)) score++;
+
+    let label = "";
+    let color = "";
+
+    if (password.length === 0) {
+      label = "";
+      color = "#eee";
+    } else if (score <= 2) {
+      label = "Weak";
+      color = "#e74c3c";
+    } else if (score <= 3) {
+      label = "Medium";
+      color = "#f39c12";
+    } else if (score <= 4) {
+      label = "Strong";
+      color = "#2ecc71";
+    } else {
+      label = "Very Strong";
+      color = "#27ae60";
+    }
+
+    return { score, label, color, percent: (score / 5) * 100 };
+  }
+
+  handleChange(e) {
+    const { name, value } = e.target;
+    this.setState(
+      (prevState) => ({
+        [name]: value
+      }),
+      () => {
+        // Re-validate field live if it was already touched
+        if (this.state.touched[name]) {
+          this.validateAndSetError(name);
+        }
+        // If password changes, re-validate confirmPassword too
+        if (name === "password" && this.state.touched.confirmPassword) {
+          this.validateAndSetError("confirmPassword");
+        }
+      }
+    );
+  }
+
+  handleBlur(e) {
+    const { name } = e.target;
+    this.setState(
+      (prevState) => ({
+        touched: { ...prevState.touched, [name]: true }
+      }),
+      () => this.validateAndSetError(name)
+    );
+  }
+
+  validateAndSetError(name) {
+    const error = this.validateField(name, this.state[name]);
+    this.setState((prevState) => ({
+      errors: { ...prevState.errors, [name]: error }
+    }));
+  }
+
+  validateAll() {
+    const fields = ["username", "email", "password", "confirmPassword"];
+    const errors = {};
+    fields.forEach((field) => {
+      errors[field] = this.validateField(field, this.state[field]);
+    });
+    return errors;
+  }
+
+  handleSubmit(e) {
+    e.preventDefault();
+    const errors = this.validateAll();
+    const touched = { username: true, email: true, password: true, confirmPassword: true };
+    const hasErrors = Object.values(errors).some((err) => err !== "");
+
+    this.setState({ errors, touched, submitted: !hasErrors });
+  }
+
+  renderField(name, label, type, placeholder) {
+    const { errors, touched } = this.state;
+    const value = this.state[name];
+    const error = errors[name];
+    const isTouched = touched[name];
+    const inputClass = isTouched ? (error ? "invalid" : "valid") : "";
+
+    return (
+      <div className="form-group">
+        <label htmlFor={name}>{label}</label>
+        <input
+          id={name}
+          name={name}
+          type={type}
+          placeholder={placeholder}
+          value={value}
+          onChange={this.handleChange}
+          onBlur={this.handleBlur}
+          className={inputClass}
+          autoComplete="off"
+        />
+        {isTouched && error && <div className="error-msg">{error}</div>}
+        {isTouched && !error && <div className="success-msg">Looks good!</div>}
+      </div>
+    );
+  }
+
+  render() {
+    const { password, submitted } = this.state;
+    const strength = this.getPasswordStrength(password);
+
+    return (
+      <div className="signup-card">
+        <h2>Create Account</h2>
+        <p className="subtitle">Sign up to get started</p>
+
+        <form onSubmit={this.handleSubmit} noValidate>
+          {this.renderField("username", "Username", "text", "Enter your username")}
+          {this.renderField("email", "Email", "text", "you@example.com")}
+
+          <div className="form-group">
+            <label htmlFor="password">Password</label>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              placeholder="Enter a strong password"
+              value={password}
+              onChange={this.handleChange}
+              onBlur={this.handleBlur}
+              className={
+                this.state.touched.password
+                  ? this.state.errors.password
+                    ? "invalid"
+                    : "valid"
+                  : ""
+              }
+              autoComplete="off"
+            />
+            {password.length > 0 && (
+              <React.Fragment>
+                <div className="strength-bar">
+                  <div
+                    className="strength-bar-fill"
+                    style={{
+                      width: strength.percent + "%",
+                      backgroundColor: strength.color
+                    }}
+                  ></div>
+                </div>
+                <div className="strength-label" style={{ color: strength.color }}>
+                  {strength.label}
+                </div>
+              </React.Fragment>
+            )}
+            {this.state.touched.password && this.state.errors.password && (
+              <div className="error-msg">{this.state.errors.password}</div>
+            )}
+            {this.state.touched.password && !this.state.errors.password && (
+              <div className="success-msg">Password meets requirements!</div>
+            )}
+          </div>
+
+          {this.renderField("confirmPassword", "Confirm Password", "password", "Re-enter your password")}
+
+          <button type="submit">Sign Up</button>
+
+          {submitted && (
+            <div className="form-success">🎉 Account created successfully!</div>
+          )}
+        </form>
+      </div>
+    );
+  }
+}
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(<SignupForm />);
+</script>
+</body>
+</html>
